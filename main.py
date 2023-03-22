@@ -1,16 +1,41 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import typing
+from enum import Flag, auto
+from functools import wraps
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+class Event(Flag):
+    create = auto()
+    delete = auto()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+F = typing.TypeVar('F', bound=typing.Callable[[Event], None])
+
+
+class Observer:
+    def __init__(self):
+        self._listeners: list[typing.Callable[[Event], None]] = []
+
+    def listener(self, callback: F) -> None:
+        self._listeners.append(callback)
+
+    @property
+    def on(self):
+        def wrapper(callback: F):
+            self._listeners.append(callback)
+            return callback
+
+        return wrapper
+
+
+observer = Observer()
+
+
+# @observer.listener
+def test(tmp):
+    return '123'
+
+observer.listener(test)
+
+@observer.on
+def test2(tmp: list):
+    return '123'
