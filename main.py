@@ -1,41 +1,49 @@
+import dataclasses
 import typing
-from enum import Flag, auto
+from enum import Flag, auto, Enum
 from functools import wraps
+from glob import glob
+from pathlib import *
 
 
-class Event(Flag):
+class EventType(Flag):
     create = auto()
     delete = auto()
 
 
-F = typing.TypeVar('F', bound=typing.Callable[[Event], None])
+@dataclasses.dataclass
+class Event:
+    type: EventType
+    payload: str
 
 
-class Observer:
+class PollingObserver:
     def __init__(self):
         self._listeners: list[typing.Callable[[Event], None]] = []
 
-    def listener(self, callback: F) -> None:
+    def listener(self, callback: typing.Callable[[Event], None]) -> None:
         self._listeners.append(callback)
 
-    @property
-    def on(self):
-        def wrapper(callback: F):
-            self._listeners.append(callback)
-            return callback
-
-        return wrapper
+    def emit(self, event: Event):
+        for listener in self._listeners:
+            listener(event)
 
 
-observer = Observer()
+observer = PollingObserver()
 
 
-# @observer.listener
-def test(tmp):
-    return '123'
+@observer.listener
+def test(event: Event):
+    match event.type:
+        case EventType.create:
+            print('create', event.payload)
+        case EventType.delete:
+            print('delete', event.payload)
 
-observer.listener(test)
 
-@observer.on
-def test2(tmp: list):
-    return '123'
+observer.emit(Event(type=EventType.delete, payload="vfdokjnffdjpf"))
+
+print(glob(r'**/*', recursive=False, include_hidden=False))
+
+
+print(list(Path().glob(r'*/*')))
