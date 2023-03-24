@@ -24,8 +24,7 @@ class ScanDiff:
 
 
 def diff(prev_scan: list[set[Path]] | None, current_scan: list[set[Path]]):
-    if prev_scan is None:
-        prev_scan = [set()] * len(current_scan)
+    prev_scan = prev_scan or [set()] * len(current_scan)
     return [ScanDiff(created=curr - prev,
                      deleted=prev - curr) for prev, curr in zip(prev_scan, current_scan)]
 
