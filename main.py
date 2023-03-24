@@ -1,49 +1,33 @@
 import dataclasses
-import typing
-from enum import Flag, auto, Enum
-from functools import wraps
-from glob import glob
 from pathlib import *
 
 
-class EventType(Flag):
-    create = auto()
-    delete = auto()
+def scanner(root: str, depth: int):
+    level_patterns = [f'.{"/*" * i}' for i in range(1, depth + 1)]
+
+    def _scan():
+        result = []
+        for level_index, level_pattern in enumerate(level_patterns):
+            level = set()
+            for path in Path(root).glob(level_pattern):
+                (level_index == 0 or (path.parent in result[level_index - 1])) and level.add(path)
+            result.append(level)
+        return result
+
+    return _scan
 
 
 @dataclasses.dataclass
-class Event:
-    type: EventType
-    payload: str
+class ScanDiff:
+    created: set[Path]
+    deleted: set[Path]
 
 
-class PollingObserver:
-    def __init__(self):
-        self._listeners: list[typing.Callable[[Event], None]] = []
-
-    def listener(self, callback: typing.Callable[[Event], None]) -> None:
-        self._listeners.append(callback)
-
-    def emit(self, event: Event):
-        for listener in self._listeners:
-            listener(event)
+def diff(prev_scan: list[set[Path]], current_scan: list[set[Path]]):
+    return [ScanDiff(created=curr - prev,
+                     deleted=prev - curr) for curr, prev in zip(prev_scan, current_scan)]
 
 
-observer = PollingObserver()
-
-
-@observer.listener
-def test(event: Event):
-    match event.type:
-        case EventType.create:
-            print('create', event.payload)
-        case EventType.delete:
-            print('delete', event.payload)
-
-
-observer.emit(Event(type=EventType.delete, payload="vfdokjnffdjpf"))
-
-print(glob(r'**/*', recursive=False, include_hidden=False))
-
-
-print(list(Path().glob(r'*/*')))
+scan = scanner('./test', 5)
+print(scan())
+print(diff(scan(), scan()))
