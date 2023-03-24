@@ -23,11 +23,15 @@ class ScanDiff:
     deleted: set[Path]
 
 
-def diff(prev_scan: list[set[Path]], current_scan: list[set[Path]]):
+def diff(prev_scan: list[set[Path]] | None, current_scan: list[set[Path]]):
+    if prev_scan is None:
+        prev_scan = [set()] * len(current_scan)
     return [ScanDiff(created=curr - prev,
-                     deleted=prev - curr) for curr, prev in zip(prev_scan, current_scan)]
+                     deleted=prev - curr) for prev, curr in zip(prev_scan, current_scan)]
 
 
 scan = scanner('./test', 5)
 print(scan())
 print(diff(scan(), scan()))
+print(diff(None, scan()))
+
