@@ -1,5 +1,5 @@
 import dataclasses
-from pathlib import *
+from pathlib import Path
 
 
 def scanner(root: str, depth: int):
