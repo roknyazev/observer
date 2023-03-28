@@ -1,1 +1,1 @@
-from scanner import scanner, diff
+from .scanner import scanner, diff
