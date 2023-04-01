@@ -44,7 +44,7 @@ class Observer:
             res = diff(self.prev_scan, scan)
             self.prev_scan = scan
             if self.is_listener_awaitable:
-                await self.listener(res)  # fixme Cannot find reference 'await' in 'None'
+                await self.listener(res)
             else:
                 self.listener(res)
             await asyncio.sleep(self.delay)
