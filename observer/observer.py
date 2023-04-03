@@ -16,35 +16,35 @@ class Observer:
                  initial_scan: list[set[Path]] = None,
                  executor=None):
 
-        self.prev_scan = initial_scan
-        self.delay = delay
-        self.executor = executor if executor else ThreadPoolExecutor()
+        self._prev_scan = initial_scan
+        self._delay = delay
+        self._executor = executor if executor else ThreadPoolExecutor()
 
         self.scan = scanner(root, depth)
-        self.listener: Callable[[ScanDiff], None] = print
-        self.is_listener_awaitable = False
+        self._listener: Callable[[ScanDiff], None] = print
+        self._is_listener_awaitable = False
 
     def listen(self, fn: Callable[[ScanDiff], None]):
-        self.listener = fn
-        self.is_listener_awaitable = inspect.iscoroutinefunction(fn)
+        self._listener = fn
+        self._is_listener_awaitable = inspect.iscoroutinefunction(fn)
 
     def observe(self):
         while True:
             scan = self.scan()
-            res = diff(self.prev_scan, scan)
-            self.prev_scan = scan
-            self.listener(res)
-            time.sleep(self.delay)
+            res = diff(self._prev_scan, scan)
+            self._prev_scan = scan
+            self._listener(res)
+            time.sleep(self._delay)
 
     async def observe_async(self):
         loop = asyncio.get_running_loop()
 
         while True:
-            scan = await loop.run_in_executor(self.executor, self.scan)
-            res = diff(self.prev_scan, scan)
-            self.prev_scan = scan
-            if self.is_listener_awaitable:
-                await self.listener(res)
+            scan = await loop.run_in_executor(self._executor, self.scan)
+            res = diff(self._prev_scan, scan)
+            self._prev_scan = scan
+            if self._is_listener_awaitable:
+                await self._listener(res)
             else:
-                self.listener(res)
-            await asyncio.sleep(self.delay)
+                self._listener(res)
+            await asyncio.sleep(self._delay)
